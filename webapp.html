@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emoji Memory Match Game</title>
+  <style>
+    body {
+      font-family: 'Trebuchet MS', sans-serif;
+      text-align: center;
+      background: repeating-linear-gradient(45deg, #f5f7fa, #f5f7fa 10px, #c3cfe2 10px, #c3cfe2 20px);
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    #game-area {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(8, 80px);
+      gap: 10px;
+    }
+    .card {
+      width: 80px;
+      height: 80px;
+      background-color: #3498db;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      border-radius: 10px;
+      user-select: none;
+      font-size: 2rem;
+      color: #fff;
+    }
+    .card.flipped {
+      background-color: #2ecc71;
+    }
+    #controls {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    #attempts, #score {
+      padding: 10px;
+      border: 2px solid #2c3e50;
+      background-color: #ecf0f1;
+      font-weight: bold;
+      font-family: 'Trebuchet MS', sans-serif;
+      border-radius: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #2ecc71;
+      color: white;
+    }
+    #sidebar {
+      margin-left: 40px;
+      text-align: center;
+    }
+    #game-result {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .link {
+      padding: 10px;
+      border: 2px solid #2c3e50;
+      background-color: #ecf0f1;
+      font-weight: bold;
+      font-family: 'Trebuchet MS', sans-serif;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #2c3e50;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .left-link {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+    }
+
+    .right-link {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+    }
+
+  </style>
+</head>
+<body>
+    <a href="index.html" class="link left-link">Home Page</a>
+    <a href="scratch.html" class="link right-link">Russell Wilson</a>
+    
+  <h1>🧠 Emoji Memory Match Game</h1>
+  <div id="controls">
+    <div id="attempts">Attempts left: <span id="attempt-count">35</span></div>
+    <div id="score">Matches: <span id="match-count">0</span>/16</div>
+    <button onclick="resetGame()">🔁 Reset Game</button>
+  </div>
+  <div id="game-area">
+    <div id="game-board"></div>
+    <div id="sidebar">
+      <div id="game-result"></div>
+    </div>
+  </div>
+
+  <script>
+    const board = document.getElementById('game-board');
+    const attemptDisplay = document.getElementById('attempt-count');
+    const matchDisplay = document.getElementById('match-count');
+    const resultDisplay = document.getElementById('game-result');
+    const emojis = ['💪','🦍','💙','💣','💰','🎱','🏈','🤬','👌','🔥','🧊','😎','💳','🏆','🌚','😜'];
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let attemptsLeft = 35; // Updated attempts to 35
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function createCard(emoji) {
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.dataset.emoji = emoji;
+      card.textContent = '';
+
+      card.addEventListener('click', () => {
+        if (card.classList.contains('flipped') || flippedCards.length === 2 || attemptsLeft <= 0) return;
+
+        card.classList.add('flipped');
+        card.textContent = emoji;
+        flippedCards.push(card);
+
+        if (flippedCards.length === 2) {
+          attemptsLeft--;
+          attemptDisplay.textContent = attemptsLeft;
+
+          setTimeout(() => {
+            const [first, second] = flippedCards;
+            if (first.dataset.emoji === second.dataset.emoji) {
+              matchedPairs++;
+              matchDisplay.textContent = matchedPairs;
+              if (matchedPairs === emojis.length) {
+                resultDisplay.textContent = '🎉 Congratulations! You matched all the pairs!';
+              }
+            } else {
+              first.classList.remove('flipped');
+              second.classList.remove('flipped');
+              first.textContent = '';
+              second.textContent = '';
+            }
+            flippedCards = [];
+
+            if (attemptsLeft === 0 && matchedPairs < emojis.length) {
+              resultDisplay.textContent = '😢 Out of attempts! Try again.';
+            }
+          }, 800);
+        }
+      });
+
+      return card;
+    }
+
+    function setupGame() {
+      board.innerHTML = '';
+      resultDisplay.textContent = '';
+      cards = [...emojis, ...emojis];
+      shuffle(cards);
+      cards.forEach(emoji => {
+        const card = createCard(emoji);
+        board.appendChild(card);
+      });
+    }
+
+    function resetGame() {
+      matchedPairs = 0;
+      attemptsLeft = 35; // Reset attempts to 35
+      attemptDisplay.textContent = attemptsLeft;
+      matchDisplay.textContent = matchedPairs;
+      flippedCards = [];
+      setupGame();
+    }
+
+    setupGame();
+  </script>
+</body>
+</html>
